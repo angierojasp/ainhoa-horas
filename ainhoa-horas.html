@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ainhoa · Control de Horas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#FAF8F5;--card:#FFFFFF;--border:#E8E4DC;--border2:#D0CAC0;
+    --text:#1A1814;--muted:#7A7468;--hint:#B0A89E;
+    --accent:#2C2C2A;--accent2:#5F5E5A;
+    --green-bg:#EAF3DE;--green-txt:#3B6D11;
+    --red-bg:#FCEBEB;--red-txt:#A32D2D;
+    --amber-bg:#FAEEDA;--amber-txt:#854F0B;
+    --blue-bg:#E6F1FB;--blue-txt:#185FA5;
+    --teal-bg:#E1F5EE;--teal-txt:#0F6E56;
+    --font-display:'DM Serif Display',serif;
+    --font-body:'DM Sans',sans-serif;
+    --radius:10px;--radius-lg:16px;
+  }
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+  h1,h2,h3{font-family:var(--font-display)}
+
+  /* ── LOGIN ── */
+  #screen-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;gap:2rem}
+  .login-brand{text-align:center}
+  .login-brand h1{font-size:2.6rem;letter-spacing:-0.5px;color:var(--text)}
+  .login-brand p{color:var(--muted);font-size:14px;margin-top:4px;font-weight:300;letter-spacing:2px;text-transform:uppercase}
+  .login-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:380px}
+  .login-card h2{font-size:1.3rem;margin-bottom:1.5rem;font-weight:400}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+  .field label{font-size:13px;color:var(--muted);font-weight:500}
+  .field input,.field select{border:1px solid var(--border2);border-radius:var(--radius);padding:10px 12px;font-family:var(--font-body);font-size:14px;background:var(--bg);color:var(--text);outline:none;transition:border .15s}
+  .field input:focus,.field select:focus{border-color:var(--accent)}
+  .btn-primary{width:100%;padding:11px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:15px;font-weight:500;cursor:pointer;transition:opacity .15s}
+  .btn-primary:hover{opacity:.85}
+  .err{color:var(--red-txt);font-size:13px;margin-top:.5rem}
+
+  /* ── SHELL ── */
+  #app{display:none;flex-direction:column;min-height:100vh}
+  .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:56px;position:sticky;top:0;z-index:100}
+  .topbar-brand{font-family:var(--font-display);font-size:1.2rem;flex:1}
+  .topbar-user{font-size:13px;color:var(--muted)}
+  .topbar-user span{color:var(--text);font-weight:500}
+  .btn-sm{padding:6px 14px;border:1px solid var(--border2);border-radius:8px;background:transparent;font-family:var(--font-body);font-size:13px;cursor:pointer;color:var(--text);transition:background .15s}
+  .btn-sm:hover{background:var(--bg)}
+  .btn-danger{border-color:#E24B4A;color:#A32D2D}
+  .btn-success{border-color:#639922;color:#3B6D11;background:var(--green-bg)}
+  .btn-info{border-color:#378ADD;color:#185FA5;background:var(--blue-bg)}
+
+  nav{background:var(--card);border-bottom:1px solid var(--border);display:flex;gap:0;overflow-x:auto}
+  .nav-tab{padding:14px 20px;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);white-space:nowrap;transition:color .15s,border-color .15s;font-weight:400}
+  .nav-tab:hover{color:var(--text)}
+  .nav-tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500}
+
+  .page{display:none;padding:1.5rem;max-width:1000px;margin:0 auto;width:100%}
+  .page.active{display:block}
+
+  /* ── CARDS ── */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem}
+  .card-title{font-size:1rem;font-weight:500;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:1.5rem}
+  .metric{background:var(--bg);border-radius:var(--radius);padding:.9rem 1rem}
+  .metric .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+  .metric .value{font-size:1.5rem;font-family:var(--font-display);color:var(--text)}
+  .metric .value.green{color:var(--green-txt)}
+  .metric .value.amber{color:var(--amber-txt)}
+
+  /* ── TABLE ── */
+  .tbl-wrap{overflow-x:auto;margin-top:.75rem}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;padding:8px 10px;color:var(--muted);font-weight:500;font-size:12px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.4px}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#FAFAF8}
+  td input{border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:13px;font-family:var(--font-body);background:var(--bg);color:var(--text);width:100%}
+  td input:focus{outline:none;border-color:var(--accent)}
+
+  /* ── BADGES ── */
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500}
+  .badge-green{background:var(--green-bg);color:var(--green-txt)}
+  .badge-amber{background:var(--amber-bg);color:var(--amber-txt)}
+  .badge-red{background:var(--red-bg);color:var(--red-txt)}
+  .badge-blue{background:var(--blue-bg);color:var(--blue-txt)}
+  .badge-teal{background:var(--teal-bg);color:var(--teal-txt)}
+
+  /* ── CLOCK ── */
+  .clock-card{text-align:center;padding:2rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg)}
+  .clock-time{font-family:var(--font-display);font-size:3.5rem;color:var(--text);letter-spacing:-1px}
+  .clock-date{color:var(--muted);font-size:14px;margin-bottom:1.5rem}
+  .clock-status{margin:1rem 0;padding:12px;border-radius:var(--radius);font-size:14px}
+  .btn-clock{padding:14px 32px;border-radius:12px;font-size:16px;font-weight:500;cursor:pointer;font-family:var(--font-body);border:none;transition:opacity .15s}
+  .btn-clock:hover{opacity:.85}
+  .btn-entry{background:#2C2C2A;color:#FAF8F5}
+  .btn-exit{background:#E24B4A;color:#fff}
+
+  /* ── FORMS ── */
+  .form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:1rem}
+  .form-row .field{flex:1;min-width:130px;margin-bottom:0}
+  .section-title{font-size:.8rem;text-transform:uppercase;letter-spacing:.8px;color:var(--hint);margin:1.5rem 0 .75rem;font-weight:500}
+  .divider{height:1px;background:var(--border);margin:1.5rem 0}
+
+  /* ── MODAL ── */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:1rem}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--card);border-radius:var(--radius-lg);padding:1.5rem;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
+  .modal h3{font-size:1.15rem;margin-bottom:1.2rem;font-weight:400}
+
+  /* ── WEEK SELECT ── */
+  .week-nav{display:flex;align-items:center;gap:12px;margin-bottom:1.2rem}
+  .week-nav button{border:1px solid var(--border2);border-radius:8px;background:transparent;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+  .week-nav span{font-size:14px;color:var(--muted);flex:1;text-align:center}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:600px){
+    .topbar{padding:0 1rem}
+    .page{padding:1rem}
+    .clock-time{font-size:2.8rem}
+    .metric .value{font-size:1.25rem}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login">
+  <div class="login-brand">
+    <h1>Ainhoa</h1>
+    <p>Control de horas</p>
+  </div>
+  <div class="login-card">
+    <h2>Iniciar sesión</h2>
+    <div class="field">
+      <label>Trabajadora</label>
+      <select id="login-user">
+        <option value="">— Elegir —</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Entrar</button>
+    <div id="login-err" class="err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">Ainhoa</div>
+    <div class="topbar-user">Hola, <span id="current-user-name">—</span></div>
+    <button class="btn-sm" onclick="doLogout()">Salir</button>
+  </div>
+  <nav id="main-nav"></nav>
+  <div id="pages"></div>
+</div>
+
+<!-- MODAL PAGO -->
+<div class="modal-bg" id="modal-pago">
+  <div class="modal">
+    <h3>Registrar pago</h3>
+    <div class="field"><label>Trabajadora</label><select id="pago-quien"></select></div>
+    <div class="field"><label>Monto ($)</label><input type="number" id="pago-monto" placeholder="0"></div>
+    <div class="field"><label>Método</label>
+      <select id="pago-metodo">
+        <option value="efectivo">Efectivo</option>
+        <option value="transferencia">Transferencia</option>
+      </select>
+    </div>
+    <div class="field"><label>Fecha</label><input type="date" id="pago-fecha"></div>
+    <div class="field"><label>Nota (opcional)</label><input type="text" id="pago-nota" placeholder="ej: semana del 2 al 8"></div>
+    <div style="display:flex;gap:10px;margin-top:1rem">
+      <button class="btn-sm" onclick="closePagoModal()">Cancelar</button>
+      <button class="btn-sm btn-success" onclick="savePago()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDIT REGISTRO -->
+<div class="modal-bg" id="modal-edit">
+  <div class="modal">
+    <h3>Editar registro</h3>
+    <input type="hidden" id="edit-id">
+    <div class="field"><label>Fecha</label><input type="date" id="edit-fecha"></div>
+    <div class="field"><label>Entrada</label><input type="time" id="edit-entrada"></div>
+    <div class="field"><label>Salida</label><input type="time" id="edit-salida"></div>
+    <div class="field"><label>Nota</label><input type="text" id="edit-nota"></div>
+    <div style="display:flex;gap:10px;margin-top:1rem">
+      <button class="btn-sm btn-danger" onclick="deleteRegistro()">Eliminar</button>
+      <button class="btn-sm" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn-sm btn-success" onclick="saveEditRegistro()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────
+// DATA LAYER
+// ────────────────────────────────────────────────
+const STORE_KEY = 'ainhoa_v1';
+
+function loadData(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || defaultData(); }
+  catch(e){ return defaultData(); }
+}
+function saveData(d){ localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+
+function defaultData(){
+  return {
+    users:[
+      {id:'admin',name:'Angie',role:'admin',pass:'ainhoa2025',precioHora:1500},
+      {id:'laurita',name:'Laurita',role:'worker',pass:'laurita123',precioHora:1200},
+      {id:'solchi',name:'Solchi',role:'worker',pass:'solchi123',precioHora:1200},
+    ],
+    registros:[],
+    pagos:[]
+  };
+}
+
+let DATA = loadData();
+let currentUser = null;
+
+// ────────────────────────────────────────────────
+// AUTH
+// ────────────────────────────────────────────────
+function initLogin(){
+  const sel = document.getElementById('login-user');
+  sel.innerHTML = '<option value="">— Elegir —</option>';
+  DATA.users.forEach(u=>{
+    const o = document.createElement('option');
+    o.value = u.id; o.textContent = u.name;
+    sel.appendChild(o);
+  });
+}
+
+function doLogin(){
+  const uid = document.getElementById('login-user').value;
+  const pass = document.getElementById('login-pass').value;
+  const user = DATA.users.find(u=>u.id===uid && u.pass===pass);
+  if(!user){ document.getElementById('login-err').textContent='Contraseña incorrecta'; return; }
+  currentUser = user;
+  document.getElementById('screen-login').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('current-user-name').textContent = user.name;
+  buildApp();
+}
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('screen-login').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-err').textContent='';
+  initLogin();
+}
+
+// ────────────────────────────────────────────────
+// APP SHELL
+// ────────────────────────────────────────────────
+function buildApp(){
+  const nav = document.getElementById('main-nav');
+  const pages = document.getElementById('pages');
+  nav.innerHTML=''; pages.innerHTML='';
+
+  const tabs = currentUser.role==='admin'
+    ? [{id:'reloj',label:'Reloj'},{id:'mis-horas',label:'Mis horas'},{id:'equipo',label:'Equipo'},{id:'pagos',label:'Pagos'},{id:'resumen',label:'Resumen'},{id:'config',label:'Config'}]
+    : [{id:'reloj',label:'Reloj'},{id:'mis-horas',label:'Mis horas'},{id:'mis-pagos',label:'Mis cobros'},{id:'mi-resumen',label:'Resumen'}];
+
+  tabs.forEach((t,i)=>{
+    const btn = document.createElement('div');
+    btn.className='nav-tab'+(i===0?' active':'');
+    btn.textContent=t.label; btn.dataset.page=t.id;
+    btn.onclick=()=>switchTab(t.id);
+    nav.appendChild(btn);
+
+    const page = document.createElement('div');
+    page.className='page'+(i===0?' active':'');
+    page.id='page-'+t.id;
+    pages.appendChild(page);
+  });
+
+  renderAllPages();
+  switchTab(tabs[0].id);
+}
+
+function switchTab(id){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active',t.dataset.page===id));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+id));
+  renderPage(id);
+}
+
+function renderAllPages(){
+  const ids = currentUser.role==='admin'
+    ? ['reloj','mis-horas','equipo','pagos','resumen','config']
+    : ['reloj','mis-horas','mis-pagos','mi-resumen'];
+  ids.forEach(renderPage);
+}
+
+function renderPage(id){
+  const el = document.getElementById('page-'+id);
+  if(!el) return;
+  const map = {
+    reloj: renderReloj,
+    'mis-horas': renderMisHoras,
+    equipo: renderEquipo,
+    pagos: renderPagos,
+    resumen: renderResumen,
+    config: renderConfig,
+    'mis-pagos': renderMisPagos,
+    'mi-resumen': renderMiResumen,
+  };
+  if(map[id]) map[id](el);
+}
+
+// ────────────────────────────────────────────────
+// HELPERS
+// ────────────────────────────────────────────────
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function padZ(n){ return String(n).padStart(2,'0'); }
+function fmt(date){ return date.toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'}); }
+function fmtFull(date){ return date.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}); }
+function nowDate(){ const d=new Date(); return `${d.getFullYear()}-${padZ(d.getMonth()+1)}-${padZ(d.getDate())}`; }
+function nowTime(){ const d=new Date(); return `${padZ(d.getHours())}:${padZ(d.getMinutes())}`; }
+function diffHours(entrada,salida){ // "HH:MM" strings
+  const [eh,em]=entrada.split(':').map(Number);
+  const [sh,sm]=salida.split(':').map(Number);
+  return Math.max(0,((sh*60+sm)-(eh*60+em))/60);
+}
+function formatHours(h){ return h.toFixed(2)+' hs'; }
+function formatMoney(n){ return '$'+Math.round(n).toLocaleString('es-AR'); }
+function getUser(id){ return DATA.users.find(u=>u.id===id); }
+function getWorkers(){ return DATA.users.filter(u=>u.role==='worker'); }
+
+// week helpers
+function getMonday(d){
+  const day=d.getDay()||7;
+  const mon=new Date(d);
+  mon.setDate(d.getDate()-day+1);
+  mon.setHours(0,0,0,0);
+  return mon;
+}
+function weekKey(d){ const m=getMonday(d); return `${m.getFullYear()}-${padZ(m.getMonth()+1)}-${padZ(m.getDate())}`; }
+function weekLabel(monday){
+  const fri=new Date(monday); fri.setDate(monday.getDate()+6);
+  return `${monday.getDate()}/${monday.getMonth()+1} – ${fri.getDate()}/${fri.getMonth()+1}/${fri.getFullYear()}`;
+}
+function getWeeks(registros){
+  const keys=[...new Set(registros.map(r=>weekKey(new Date(r.fecha+'T12:00:00'))))];
+  keys.sort((a,b)=>b.localeCompare(a));
+  return keys;
+}
+function registrosInWeek(registros,monday){
+  const fri=new Date(monday); fri.setDate(monday.getDate()+6);
+  return registros.filter(r=>{
+    const d=new Date(r.fecha+'T12:00:00');
+    return d>=monday && d<=fri;
+  });
+}
+function monthLabel(m){ return new Date(m+'-15').toLocaleDateString('es-AR',{month:'long',year:'numeric'}); }
+
+// ────────────────────────────────────────────────
+// RELOJ
+// ────────────────────────────────────────────────
+let clockInterval=null;
+function renderReloj(el){
+  el.innerHTML=`
+    <div style="max-width:420px;margin:0 auto">
+      <div class="clock-card">
+        <div class="clock-time" id="clock-display">00:00:00</div>
+        <div class="clock-date" id="clock-date"></div>
+        <div id="clock-status" class="clock-status"></div>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <button class="btn-clock btn-entry" id="btn-entrada" onclick="marcarEntrada()">▶ Marcar entrada</button>
+          <button class="btn-clock btn-exit" id="btn-salida" onclick="marcarSalida()" style="display:none">■ Marcar salida</button>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem">
+        <div class="section-title">Registros de hoy</div>
+        <div id="registros-hoy"></div>
+      </div>
+    </div>`;
+  tickClock();
+  if(clockInterval) clearInterval(clockInterval);
+  clockInterval=setInterval(tickClock,1000);
+  renderRegistrosHoy();
+}
+
+function tickClock(){
+  const d=new Date();
+  const el=document.getElementById('clock-display');
+  const del=document.getElementById('clock-date');
+  if(!el) return;
+  el.textContent=`${padZ(d.getHours())}:${padZ(d.getMinutes())}:${padZ(d.getSeconds())}`;
+  del.textContent=d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  checkOpenEntry();
+}
+
+function checkOpenEntry(){
+  const today=nowDate();
+  const open=DATA.registros.find(r=>r.userId===currentUser.id && r.fecha===today && !r.salida);
+  const btnE=document.getElementById('btn-entrada');
+  const btnS=document.getElementById('btn-salida');
+  const status=document.getElementById('clock-status');
+  if(!btnE) return;
+  if(open){
+    btnE.style.display='none'; btnS.style.display='block';
+    status.style.background='var(--green-bg)';
+    status.style.color='var(--green-txt)';
+    status.textContent='✓ Entraste a las '+open.entrada;
+  } else {
+    btnE.style.display='block'; btnS.style.display='none';
+    status.style.background='var(--bg)';
+    status.style.color='var(--muted)';
+    const last=DATA.registros.filter(r=>r.userId===currentUser.id && r.fecha===today && r.salida).pop();
+    status.textContent=last?'Última salida: '+last.salida:'Sin registros hoy';
+  }
+}
+
+function marcarEntrada(){
+  const today=nowDate();
+  const open=DATA.registros.find(r=>r.userId===currentUser.id && r.fecha===today && !r.salida);
+  if(open){ alert('Ya tenés una entrada registrada sin salida.'); return; }
+  DATA.registros.push({id:uid(),userId:currentUser.id,fecha:today,entrada:nowTime(),salida:null,nota:''});
+  saveData(DATA); checkOpenEntry(); renderRegistrosHoy();
+}
+
+function marcarSalida(){
+  const today=nowDate();
+  const open=DATA.registros.find(r=>r.userId===currentUser.id && r.fecha===today && !r.salida);
+  if(!open){ alert('No tenés entrada registrada.'); return; }
+  open.salida=nowTime(); saveData(DATA); checkOpenEntry(); renderRegistrosHoy();
+}
+
+function renderRegistrosHoy(){
+  const el=document.getElementById('registros-hoy');
+  if(!el) return;
+  const today=nowDate();
+  const regs=DATA.registros.filter(r=>r.userId===currentUser.id && r.fecha===today);
+  if(!regs.length){ el.innerHTML='<p style="color:var(--hint);font-size:13px">Sin registros hoy</p>'; return; }
+  const u=getUser(currentUser.id);
+  el.innerHTML=`<div class="card"><div class="tbl-wrap"><table>
+    <tr><th>Entrada</th><th>Salida</th><th>Horas</th><th>Ganado</th><th></th></tr>
+    ${regs.map(r=>{
+      const h=r.salida?diffHours(r.entrada,r.salida):null;
+      const earn=h?(h*(u?.precioHora||0)):null;
+      return `<tr>
+        <td>${r.entrada}</td>
+        <td>${r.salida||'<span style="color:var(--amber-txt)">en curso</span>'}</td>
+        <td>${h?formatHours(h):'—'}</td>
+        <td>${earn?formatMoney(earn):'—'}</td>
+        <td><button class="btn-sm" onclick="openEditModal('${r.id}')">Editar</button></td>
+      </tr>`;
+    }).join('')}
+  </table></div></div>`;
+}
+
+// ────────────────────────────────────────────────
+// MIS HORAS (worker: own records)
+// ────────────────────────────────────────────────
+let misHorasWeekOffset=0;
+function renderMisHoras(el){
+  const myRegs=DATA.registros.filter(r=>r.userId===currentUser.id && r.salida);
+  const weeks=getWeeks(myRegs);
+  const u=getUser(currentUser.id);
+
+  // current week display
+  const today=new Date(); today.setHours(12,0,0,0);
+  const baseMonday=getMonday(today);
+  baseMonday.setDate(baseMonday.getDate()-misHorasWeekOffset*7);
+  const weekRegs=registrosInWeek(myRegs,baseMonday);
+  const totalH=weekRegs.reduce((s,r)=>s+diffHours(r.entrada,r.salida),0);
+  const totalEarn=totalH*(u?.precioHora||0);
+
+  el.innerHTML=`
+    <div class="metric-grid">
+      <div class="metric"><div class="label">Horas esta semana</div><div class="value">${totalH.toFixed(1)}</div></div>
+      <div class="metric"><div class="label">Ganado esta semana</div><div class="value green">${formatMoney(totalEarn)}</div></div>
+      <div class="metric"><div class="label">$/hora</div><div class="value">${formatMoney(u?.precioHora||0)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        Mis registros
+        <button class="btn-sm" onclick="openAddRegistro()">+ Agregar manual</button>
+      </div>
+      <div class="week-nav">
+        <button onclick="misHorasWeekOffset++;renderPage('mis-horas')">‹</button>
+        <span>${weekLabel(baseMonday)}</span>
+        <button onclick="if(misHorasWeekOffset>0){misHorasWeekOffset--;renderPage('mis-horas')}">›</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Ganado</th><th>Nota</th><th></th></tr>
+          ${weekRegs.length?weekRegs.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(r=>{
+            const h=diffHours(r.entrada,r.salida);
+            return `<tr>
+              <td>${fmt(new Date(r.fecha+'T12:00:00'))}</td>
+              <td>${r.entrada}</td><td>${r.salida}</td>
+              <td>${formatHours(h)}</td>
+              <td>${formatMoney(h*(u?.precioHora||0))}</td>
+              <td style="color:var(--muted);font-size:12px">${r.nota||''}</td>
+              <td><button class="btn-sm" onclick="openEditModal('${r.id}')">Editar</button></td>
+            </tr>`;
+          }).join(''):'<tr><td colspan="7" style="color:var(--hint);text-align:center;padding:1rem">Sin registros esta semana</td></tr>'}
+        </table>
+      </div>
+    </div>`;
+}
+
+// ────────────────────────────────────────────────
+// EQUIPO (admin: all workers)
+// ────────────────────────────────────────────────
+let equipoWeekOffset=0;
+function renderEquipo(el){
+  const today=new Date(); today.setHours(12,0,0,0);
+  const baseMonday=getMonday(today);
+  baseMonday.setDate(baseMonday.getDate()-equipoWeekOffset*7);
+
+  const workers=getWorkers();
+  const rows=workers.map(w=>{
+    const regs=DATA.registros.filter(r=>r.userId===w.id && r.salida);
+    const weekRegs=registrosInWeek(regs,baseMonday);
+    const h=weekRegs.reduce((s,r)=>s+diffHours(r.entrada,r.salida),0);
+    const earn=h*(w.precioHora||0);
+    const open=DATA.registros.find(r=>r.userId===w.id && r.fecha===nowDate() && !r.salida);
+    return {w,h,earn,open};
+  });
+
+  el.innerHTML=`
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-title">Estado actual — hoy</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        ${workers.map(w=>{
+          const open=DATA.registros.find(r=>r.userId===w.id && r.fecha===nowDate() && !r.salida);
+          return `<div class="metric" style="flex:1;min-width:120px">
+            <div class="label">${w.name}</div>
+            <div style="margin-top:6px"><span class="badge ${open?'badge-green':'badge-amber'}">${open?'▶ trabajando':'fuera'}</span></div>
+            ${open?`<div style="font-size:12px;color:var(--muted);margin-top:4px">desde ${open.entrada}</div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        Horas por trabajadora
+        <button class="btn-sm btn-info" onclick="openPagoModal()">+ Registrar pago</button>
+      </div>
+      <div class="week-nav">
+        <button onclick="equipoWeekOffset++;renderPage('equipo')">‹</button>
+        <span>${weekLabel(baseMonday)}</span>
+        <button onclick="if(equipoWeekOffset>0){equipoWeekOffset--;renderPage('equipo')}">›</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Trabajadora</th><th>Horas</th><th>Ganado</th><th>$/hora</th><th>Ver detalle</th></tr>
+          ${rows.map(({w,h,earn})=>`<tr>
+            <td><strong>${w.name}</strong></td>
+            <td>${formatHours(h)}</td>
+            <td style="color:var(--green-txt);font-weight:500">${formatMoney(earn)}</td>
+            <td>${formatMoney(w.precioHora||0)}</td>
+            <td><button class="btn-sm" onclick="verDetalleWorker('${w.id}')">Ver</button></td>
+          </tr>`).join('')}
+        </table>
+      </div>
+    </div>
+    <div id="detalle-worker" style="margin-top:1.5rem"></div>`;
+}
+
+let detalleWorkerWeekOffset=0;
+let detalleWorkerId=null;
+function verDetalleWorker(wid){
+  detalleWorkerId=wid; detalleWorkerWeekOffset=0;
+  renderDetalleWorker();
+}
+function renderDetalleWorker(){
+  const el=document.getElementById('detalle-worker');
+  if(!el||!detalleWorkerId) return;
+  const w=getUser(detalleWorkerId);
+  if(!w) return;
+  const today=new Date(); today.setHours(12,0,0,0);
+  const baseMonday=getMonday(today);
+  baseMonday.setDate(baseMonday.getDate()-detalleWorkerWeekOffset*7);
+  const regs=DATA.registros.filter(r=>r.userId===w.id && r.salida);
+  const weekRegs=registrosInWeek(regs,baseMonday);
+
+  el.innerHTML=`<div class="card">
+    <div class="card-title">Detalle: ${w.name}</div>
+    <div class="week-nav">
+      <button onclick="detalleWorkerWeekOffset++;renderDetalleWorker()">‹</button>
+      <span>${weekLabel(baseMonday)}</span>
+      <button onclick="if(detalleWorkerWeekOffset>0){detalleWorkerWeekOffset--;renderDetalleWorker()}">›</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <tr><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Ganado</th><th>Nota</th><th></th></tr>
+      ${weekRegs.length?weekRegs.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(r=>{
+        const h=diffHours(r.entrada,r.salida);
+        return `<tr>
+          <td>${fmt(new Date(r.fecha+'T12:00:00'))}</td>
+          <td>${r.entrada}</td><td>${r.salida}</td>
+          <td>${formatHours(h)}</td>
+          <td>${formatMoney(h*(w.precioHora||0))}</td>
+          <td style="font-size:12px;color:var(--muted)">${r.nota||''}</td>
+          <td><button class="btn-sm" onclick="openEditModal('${r.id}')">Editar</button></td>
+        </tr>`;
+      }).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--hint);padding:1rem">Sin registros</td></tr>'}
+    </table></div>
+  </div>`;
+}
+
+// ────────────────────────────────────────────────
+// PAGOS (admin)
+// ────────────────────────────────────────────────
+function renderPagos(el){
+  const pagos=[...DATA.pagos].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const workers=getWorkers();
+
+  el.innerHTML=`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
+      <button class="btn-sm btn-success" onclick="openPagoModal()">+ Registrar pago</button>
+    </div>
+    ${workers.map(w=>{
+      const wPagos=pagos.filter(p=>p.userId===w.id);
+      const totalPagado=wPagos.reduce((s,p)=>s+Number(p.monto),0);
+      const regs=DATA.registros.filter(r=>r.userId===w.id && r.salida);
+      const totalGanado=regs.reduce((s,r)=>s+diffHours(r.entrada,r.salida)*(w.precioHora||0),0);
+      const saldo=totalGanado-totalPagado;
+      return `<div class="card" style="margin-bottom:1.5rem">
+        <div class="card-title">
+          ${w.name}
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge ${saldo>0?'badge-amber':'badge-green'}">${saldo>0?'Debe '+formatMoney(saldo):'Al día ✓'}</span>
+          </div>
+        </div>
+        <div class="metric-grid" style="margin-bottom:1rem">
+          <div class="metric"><div class="label">Total ganado</div><div class="value">${formatMoney(totalGanado)}</div></div>
+          <div class="metric"><div class="label">Total pagado</div><div class="value green">${formatMoney(totalPagado)}</div></div>
+          <div class="metric"><div class="label">Saldo pendiente</div><div class="value amber">${formatMoney(Math.max(0,saldo))}</div></div>
+        </div>
+        <div class="tbl-wrap"><table>
+          <tr><th>Fecha</th><th>Monto</th><th>Método</th><th>Nota</th><th></th></tr>
+          ${wPagos.length?wPagos.map(p=>`<tr>
+            <td>${fmtFull(new Date(p.fecha+'T12:00:00'))}</td>
+            <td style="font-weight:500;color:var(--green-txt)">${formatMoney(p.monto)}</td>
+            <td><span class="badge ${p.metodo==='efectivo'?'badge-amber':'badge-blue'}">${p.metodo==='efectivo'?'💵 Efectivo':'🏦 Transferencia'}</span></td>
+            <td style="font-size:12px;color:var(--muted)">${p.nota||''}</td>
+            <td><button class="btn-sm btn-danger" onclick="deletePago('${p.id}')">×</button></td>
+          </tr>`).join(''):'<tr><td colspan="5" style="color:var(--hint);text-align:center;padding:1rem">Sin pagos registrados</td></tr>'}
+        </table></div>
+      </div>`;
+    }).join('')}`;
+}
+
+// ────────────────────────────────────────────────
+// MIS PAGOS (worker)
+// ────────────────────────────────────────────────
+function renderMisPagos(el){
+  const u=getUser(currentUser.id);
+  const pagos=DATA.pagos.filter(p=>p.userId===currentUser.id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const regs=DATA.registros.filter(r=>r.userId===currentUser.id && r.salida);
+  const totalGanado=regs.reduce((s,r)=>s+diffHours(r.entrada,r.salida)*(u?.precioHora||0),0);
+  const totalPagado=pagos.reduce((s,p)=>s+Number(p.monto),0);
+  const saldo=totalGanado-totalPagado;
+
+  el.innerHTML=`
+    <div class="metric-grid">
+      <div class="metric"><div class="label">Total ganado</div><div class="value">${formatMoney(totalGanado)}</div></div>
+      <div class="metric"><div class="label">Total cobrado</div><div class="value green">${formatMoney(totalPagado)}</div></div>
+      <div class="metric"><div class="label">Por cobrar</div><div class="value amber">${formatMoney(Math.max(0,saldo))}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Mis cobros</div>
+      <div class="tbl-wrap"><table>
+        <tr><th>Fecha</th><th>Monto</th><th>Método</th><th>Nota</th></tr>
+        ${pagos.length?pagos.map(p=>`<tr>
+          <td>${fmtFull(new Date(p.fecha+'T12:00:00'))}</td>
+          <td style="font-weight:500;color:var(--green-txt)">${formatMoney(p.monto)}</td>
+          <td><span class="badge ${p.metodo==='efectivo'?'badge-amber':'badge-blue'}">${p.metodo==='efectivo'?'💵 Efectivo':'🏦 Transferencia'}</span></td>
+          <td style="font-size:12px;color:var(--muted)">${p.nota||''}</td>
+        </tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--hint);padding:1rem">Sin cobros registrados</td></tr>'}
+      </table></div>
+    </div>`;
+}
+
+// ────────────────────────────────────────────────
+// RESUMEN ADMIN
+// ────────────────────────────────────────────────
+let resumenMode='semana';
+let resumenOffset=0;
+function renderResumen(el){
+  el.innerHTML=`
+    <div style="display:flex;gap:8px;margin-bottom:1.5rem">
+      <button class="btn-sm ${resumenMode==='semana'?'btn-success':''}" onclick="resumenMode='semana';resumenOffset=0;renderPage('resumen')">Por semana</button>
+      <button class="btn-sm ${resumenMode==='mes'?'btn-success':''}" onclick="resumenMode='mes';resumenOffset=0;renderPage('resumen')">Por mes</button>
+    </div>
+    ${resumenMode==='semana'?buildResumenSemana():buildResumenMes()}`;
+}
+
+function buildResumenSemana(){
+  const today=new Date(); today.setHours(12,0,0,0);
+  const baseMonday=getMonday(today);
+  baseMonday.setDate(baseMonday.getDate()-resumenOffset*7);
+  const workers=getWorkers();
+
+  let html=`<div class="week-nav">
+    <button onclick="resumenOffset++;renderPage('resumen')">‹</button>
+    <span>${weekLabel(baseMonday)}</span>
+    <button onclick="if(resumenOffset>0){resumenOffset--;renderPage('resumen')}">›</button>
+  </div><div class="card"><div class="card-title">Semana: ${weekLabel(baseMonday)}</div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Trabajadora</th><th>Horas</th><th>Ganado</th><th>Pagado</th><th>Saldo</th></tr>`;
+
+  let totalH=0,totalE=0,totalP=0;
+  workers.forEach(w=>{
+    const regs=DATA.registros.filter(r=>r.userId===w.id && r.salida);
+    const weekRegs=registrosInWeek(regs,baseMonday);
+    const h=weekRegs.reduce((s,r)=>s+diffHours(r.entrada,r.salida),0);
+    const earn=h*(w.precioHora||0);
+    const fri=new Date(baseMonday); fri.setDate(baseMonday.getDate()+6);
+    const pagos=DATA.pagos.filter(p=>{
+      const d=new Date(p.fecha+'T12:00:00');
+      return p.userId===w.id && d>=baseMonday && d<=fri;
+    });
+    const paid=pagos.reduce((s,p)=>s+Number(p.monto),0);
+    const saldo=earn-paid;
+    totalH+=h; totalE+=earn; totalP+=paid;
+    html+=`<tr><td>${w.name}</td><td>${formatHours(h)}</td><td>${formatMoney(earn)}</td><td>${formatMoney(paid)}</td>
+      <td><span class="badge ${saldo>0?'badge-amber':'badge-green'}">${saldo>0?'debe '+formatMoney(saldo):'✓'}</span></td></tr>`;
+  });
+
+  html+=`<tr style="font-weight:500;border-top:2px solid var(--border)">
+    <td>TOTAL</td><td>${formatHours(totalH)}</td><td>${formatMoney(totalE)}</td><td>${formatMoney(totalP)}</td>
+    <td>${formatMoney(Math.max(0,totalE-totalP))}</td>
+  </tr></table></div></div>`;
+  return html;
+}
+
+function buildResumenMes(){
+  // get all months present in data
+  const allDates=[...DATA.registros.map(r=>r.fecha),...DATA.pagos.map(p=>p.fecha)];
+  if(!allDates.length) return '<p style="color:var(--hint)">Sin datos todavía.</p>';
+
+  const months=[...new Set(allDates.map(d=>d.slice(0,7)))].sort((a,b)=>b.localeCompare(a));
+  const mon=months[resumenOffset]||months[0];
+
+  const workers=getWorkers();
+
+  let html=`<div class="week-nav">
+    <button onclick="if(resumenOffset<${months.length-1}){resumenOffset++;renderPage('resumen')}">‹</button>
+    <span>${monthLabel(mon)}</span>
+    <button onclick="if(resumenOffset>0){resumenOffset--;renderPage('resumen')}">›</button>
+  </div><div class="card"><div class="card-title">Mes: ${monthLabel(mon)}</div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Trabajadora</th><th>Horas</th><th>Ganado</th><th>Pagado</th><th>Saldo</th></tr>`;
+
+  let totalH=0,totalE=0,totalP=0;
+  workers.forEach(w=>{
+    const regs=DATA.registros.filter(r=>r.userId===w.id && r.salida && r.fecha.slice(0,7)===mon);
+    const h=regs.reduce((s,r)=>s+diffHours(r.entrada,r.salida),0);
+    const earn=h*(w.precioHora||0);
+    const pagos=DATA.pagos.filter(p=>p.userId===w.id && p.fecha.slice(0,7)===mon);
+    const paid=pagos.reduce((s,p)=>s+Number(p.monto),0);
+    const saldo=earn-paid;
+    totalH+=h; totalE+=earn; totalP+=paid;
+    html+=`<tr><td>${w.name}</td><td>${formatHours(h)}</td><td>${formatMoney(earn)}</td><td>${formatMoney(paid)}</td>
+      <td><span class="badge ${saldo>0?'badge-amber':'badge-green'}">${saldo>0?'debe '+formatMoney(saldo):'✓'}</span></td></tr>`;
+  });
+  html+=`<tr style="font-weight:500"><td>TOTAL</td><td>${formatHours(totalH)}</td><td>${formatMoney(totalE)}</td><td>${formatMoney(totalP)}</td><td>${formatMoney(Math.max(0,totalE-totalP))}</td></tr>
+  </table></div></div>`;
+  return html;
+}
+
+// ────────────────────────────────────────────────
+// MI RESUMEN (worker)
+// ────────────────────────────────────────────────
+let miResumenMode='semana';
+let miResumenOffset=0;
+function renderMiResumen(el){
+  el.innerHTML=`
+    <div style="display:flex;gap:8px;margin-bottom:1.5rem">
+      <button class="btn-sm ${miResumenMode==='semana'?'btn-success':''}" onclick="miResumenMode='semana';miResumenOffset=0;renderPage('mi-resumen')">Por semana</button>
+      <button class="btn-sm ${miResumenMode==='mes'?'btn-success':''}" onclick="miResumenMode='mes';miResumenOffset=0;renderPage('mi-resumen')">Por mes</button>
+    </div>
+    ${miResumenMode==='semana'?buildMiResumenSemana():buildMiResumenMes()}`;
+}
+
+function buildMiResumenSemana(){
+  const u=getUser(currentUser.id);
+  const today=new Date(); today.setHours(12,0,0,0);
+  const baseMonday=getMonday(today);
+  baseMonday.setDate(baseMonday.getDate()-miResumenOffset*7);
+  const regs=DATA.registros.filter(r=>r.userId===currentUser.id && r.salida);
+  const weekRegs=registrosInWeek(regs,baseMonday);
+  const h=weekRegs.reduce((s,r)=>s+diffHours(r.entrada,r.salida),0);
+  const earn=h*(u?.precioHora||0);
+  const fri=new Date(baseMonday); fri.setDate(baseMonday.getDate()+6);
+  const pagos=DATA.pagos.filter(p=>{
+    const d=new Date(p.fecha+'T12:00:00');
+    return p.userId===currentUser.id && d>=baseMonday && d<=fri;
+  });
+  const paid=pagos.reduce((s,p)=>s+Number(p.monto),0);
+
+  return `<div class="week-nav">
+    <button onclick="miResumenOffset++;renderPage('mi-resumen')">‹</button>
+    <span>${weekLabel(baseMonday)}</span>
+    <button onclick="if(miResumenOffset>0){miResumenOffset--;renderPage('mi-resumen')}">›</button>
+  </div>
+  <div class="metric-grid">
+    <div class="metric"><div class="label">Horas</div><div class="value">${totalH?totalH.toFixed(1):h.toFixed(1)}</div></div>
+    <div class="metric"><div class="label">Ganado</div><div class="value green">${formatMoney(earn)}</div></div>
+    <div class="metric"><div class="label">Cobrado</div><div class="value">${formatMoney(paid)}</div></div>
+    <div class="metric"><div class="label">Por cobrar</div><div class="value amber">${formatMoney(Math.max(0,earn-paid))}</div></div>
+  </div>`;
+  var totalH=h;
+}
+
+function buildMiResumenMes(){
+  const u=getUser(currentUser.id);
+  const allDates=[...DATA.registros.filter(r=>r.userId===currentUser.id).map(r=>r.fecha)];
+  if(!allDates.length) return '<p style="color:var(--hint)">Sin datos todavía.</p>';
+  const months=[...new Set(allDates.map(d=>d.slice(0,7)))].sort((a,b)=>b.localeCompare(a));
+  const mon=months[miResumenOffset]||months[0];
+  const regs=DATA.registros.filter(r=>r.userId===currentUser.id && r.salida && r.fecha.slice(0,7)===mon);
+  const h=regs.reduce((s,r)=>s+diffHours(r.entrada,r.salida),0);
+  const earn=h*(u?.precioHora||0);
+  const pagos=DATA.pagos.filter(p=>p.userId===currentUser.id && p.fecha.slice(0,7)===mon);
+  const paid=pagos.reduce((s,p)=>s+Number(p.monto),0);
+
+  return `<div class="week-nav">
+    <button onclick="if(miResumenOffset<${months.length-1}){miResumenOffset++;renderPage('mi-resumen')}">‹</button>
+    <span>${monthLabel(mon)}</span>
+    <button onclick="if(miResumenOffset>0){miResumenOffset--;renderPage('mi-resumen')}">›</button>
+  </div>
+  <div class="metric-grid">
+    <div class="metric"><div class="label">Horas</div><div class="value">${h.toFixed(1)}</div></div>
+    <div class="metric"><div class="label">Ganado</div><div class="value green">${formatMoney(earn)}</div></div>
+    <div class="metric"><div class="label">Cobrado</div><div class="value">${formatMoney(paid)}</div></div>
+    <div class="metric"><div class="label">Por cobrar</div><div class="value amber">${formatMoney(Math.max(0,earn-paid))}</div></div>
+  </div>`;
+}
+
+// ────────────────────────────────────────────────
+// CONFIG (admin)
+// ────────────────────────────────────────────────
+function renderConfig(el){
+  const workers=DATA.users.filter(u=>u.role!=='admin'||u.id==='admin');
+  el.innerHTML=`
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-title">Precio por hora por trabajadora</div>
+      <div class="tbl-wrap"><table>
+        <tr><th>Nombre</th><th>$/hora</th><th></th></tr>
+        ${DATA.users.map(u=>`<tr>
+          <td>${u.name} ${u.role==='admin'?'<span class="badge badge-blue">Admin</span>':''}</td>
+          <td><input type="number" value="${u.precioHora||0}" id="precio-${u.id}" style="width:120px"></td>
+          <td><button class="btn-sm btn-success" onclick="savePrecio('${u.id}')">Guardar</button></td>
+        </tr>`).join('')}
+      </table></div>
+    </div>
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-title">Trabajadoras</div>
+      <div id="workers-list">
+        ${DATA.users.filter(u=>u.role==='worker').map(u=>`
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1"><strong>${u.name}</strong><br><span style="font-size:12px;color:var(--muted)">Usuario: ${u.id}</span></div>
+            <div>
+              <input type="password" placeholder="Nueva contraseña" id="pass-new-${u.id}" style="border:1px solid var(--border2);border-radius:6px;padding:6px 10px;font-size:13px;width:160px">
+              <button class="btn-sm" onclick="changePass('${u.id}')" style="margin-left:6px">Cambiar contraseña</button>
+            </div>
+            <button class="btn-sm btn-danger" onclick="deleteWorker('${u.id}')">Eliminar</button>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:1.2rem" class="section-title">Agregar trabajadora</div>
+      <div class="form-row">
+        <div class="field"><label>Nombre</label><input type="text" id="new-name" placeholder="Nombre"></div>
+        <div class="field"><label>Usuario (sin espacios)</label><input type="text" id="new-id" placeholder="ej: vicu"></div>
+        <div class="field"><label>Contraseña</label><input type="password" id="new-pass" placeholder="••••••"></div>
+        <div class="field"><label>$/hora</label><input type="number" id="new-precio" value="1200"></div>
+      </div>
+      <button class="btn-sm btn-success" onclick="addWorker()">Agregar</button>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--red-txt)">Zona peligrosa</div>
+      <button class="btn-sm btn-danger" onclick="if(confirm('¿Segura? Se borran TODOS los datos.')){localStorage.removeItem('${STORE_KEY}');DATA=defaultData();saveData(DATA);buildApp()}">Resetear todos los datos</button>
+    </div>`;
+}
+
+function savePrecio(uid){
+  const val=parseFloat(document.getElementById('precio-'+uid).value)||0;
+  const u=DATA.users.find(u=>u.id===uid);
+  if(u){ u.precioHora=val; saveData(DATA); alert('✓ Guardado'); }
+}
+function changePass(uid){
+  const val=document.getElementById('pass-new-'+uid).value.trim();
+  if(!val){ alert('Ingresá una contraseña'); return; }
+  const u=DATA.users.find(u=>u.id===uid);
+  if(u){ u.pass=val; saveData(DATA); alert('✓ Contraseña actualizada'); document.getElementById('pass-new-'+uid).value=''; }
+}
+function deleteWorker(uid){
+  if(!confirm('¿Eliminar esta trabajadora y todos sus registros?')) return;
+  DATA.users=DATA.users.filter(u=>u.id!==uid);
+  DATA.registros=DATA.registros.filter(r=>r.userId!==uid);
+  DATA.pagos=DATA.pagos.filter(p=>p.userId!==uid);
+  saveData(DATA); renderPage('config');
+}
+function addWorker(){
+  const name=document.getElementById('new-name').value.trim();
+  const id=document.getElementById('new-id').value.trim().toLowerCase().replace(/\s/g,'');
+  const pass=document.getElementById('new-pass').value.trim();
+  const precio=parseFloat(document.getElementById('new-precio').value)||1200;
+  if(!name||!id||!pass){ alert('Completá todos los campos'); return; }
+  if(DATA.users.find(u=>u.id===id)){ alert('Ese usuario ya existe'); return; }
+  DATA.users.push({id,name,role:'worker',pass,precioHora:precio});
+  saveData(DATA); renderPage('config'); initLogin();
+}
+
+// ────────────────────────────────────────────────
+// MODALES
+// ────────────────────────────────────────────────
+function openPagoModal(){
+  const sel=document.getElementById('pago-quien');
+  sel.innerHTML=''; getWorkers().forEach(w=>{ const o=document.createElement('option'); o.value=w.id; o.textContent=w.name; sel.appendChild(o); });
+  document.getElementById('pago-fecha').value=nowDate();
+  document.getElementById('pago-monto').value='';
+  document.getElementById('pago-nota').value='';
+  document.getElementById('modal-pago').classList.add('open');
+}
+function closePagoModal(){ document.getElementById('modal-pago').classList.remove('open'); }
+function savePago(){
+  const uid_w=document.getElementById('pago-quien').value;
+  const monto=parseFloat(document.getElementById('pago-monto').value);
+  if(!monto||monto<=0){ alert('Ingresá un monto válido'); return; }
+  DATA.pagos.push({
+    id:uid(), userId:uid_w,
+    monto, metodo:document.getElementById('pago-metodo').value,
+    fecha:document.getElementById('pago-fecha').value,
+    nota:document.getElementById('pago-nota').value
+  });
+  saveData(DATA); closePagoModal();
+  renderPage('pagos'); renderPage('equipo'); renderPage('resumen');
+}
+function deletePago(id){
+  if(!confirm('¿Eliminar este pago?')) return;
+  DATA.pagos=DATA.pagos.filter(p=>p.id!==id); saveData(DATA); renderPage('pagos'); renderPage('resumen');
+}
+
+function openEditModal(id){
+  const r=DATA.registros.find(r=>r.id===id);
+  if(!r) return;
+  document.getElementById('edit-id').value=r.id;
+  document.getElementById('edit-fecha').value=r.fecha;
+  document.getElementById('edit-entrada').value=r.entrada;
+  document.getElementById('edit-salida').value=r.salida||'';
+  document.getElementById('edit-nota').value=r.nota||'';
+  document.getElementById('modal-edit').classList.add('open');
+}
+function closeEditModal(){ document.getElementById('modal-edit').classList.remove('open'); }
+function saveEditRegistro(){
+  const id=document.getElementById('edit-id').value;
+  const r=DATA.registros.find(r=>r.id===id);
+  if(!r) return;
+  r.fecha=document.getElementById('edit-fecha').value;
+  r.entrada=document.getElementById('edit-entrada').value;
+  r.salida=document.getElementById('edit-salida').value||null;
+  r.nota=document.getElementById('edit-nota').value;
+  saveData(DATA); closeEditModal();
+  ['reloj','mis-horas','equipo','resumen','mi-resumen'].forEach(renderPage);
+  renderRegistrosHoy(); renderDetalleWorker();
+}
+function deleteRegistro(){
+  if(!confirm('¿Eliminar este registro?')) return;
+  const id=document.getElementById('edit-id').value;
+  DATA.registros=DATA.registros.filter(r=>r.id!==id);
+  saveData(DATA); closeEditModal();
+  ['reloj','mis-horas','equipo','resumen','mi-resumen'].forEach(renderPage);
+  renderRegistrosHoy();
+}
+
+function openAddRegistro(){
+  document.getElementById('edit-id').value='NEW';
+  document.getElementById('edit-fecha').value=nowDate();
+  document.getElementById('edit-entrada').value='09:00';
+  document.getElementById('edit-salida').value='17:00';
+  document.getElementById('edit-nota').value='';
+  document.getElementById('modal-edit').classList.add('open');
+}
+
+// override save for new
+const _origSave=saveEditRegistro;
+window.saveEditRegistro=function(){
+  const id=document.getElementById('edit-id').value;
+  if(id==='NEW'){
+    DATA.registros.push({
+      id:uid(), userId:currentUser.id,
+      fecha:document.getElementById('edit-fecha').value,
+      entrada:document.getElementById('edit-entrada').value,
+      salida:document.getElementById('edit-salida').value||null,
+      nota:document.getElementById('edit-nota').value
+    });
+    saveData(DATA); closeEditModal();
+    ['reloj','mis-horas','equipo','resumen','mi-resumen'].forEach(renderPage);
+    renderRegistrosHoy();
+  } else { _origSave(); }
+};
+
+// close modals on bg click
+document.getElementById('modal-pago').addEventListener('click',function(e){ if(e.target===this) closePagoModal(); });
+document.getElementById('modal-edit').addEventListener('click',function(e){ if(e.target===this) closeEditModal(); });
+
+// ── INIT ──
+initLogin();
+document.getElementById('login-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>
